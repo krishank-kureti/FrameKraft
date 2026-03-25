@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Models (too big for git)
+backend/models/*.pth
+backend/models/*.bin
+backend/models/*.safetensors
+backend/models/models--*
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+.next/
+build/
+dist/
+
+# Uploads (user data)
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+!docs/*.png
+!docs/*.jpg
+
+# Logs
+*.log
