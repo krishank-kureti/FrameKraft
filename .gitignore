@@ -46,3 +46,7 @@ uploads/
 
 # Logs
 *.log
+
+#AI agent
+.ocignore
+AGENTS.md
