@@ -1,5 +1,6 @@
 from Clip import load_clip_model, load_image as load_image_clip, classify_image
 from Blip import load_blip_model, load_image as load_image_blip, generate_captions
+from CvEdit import run_cv_edit
 import torch
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -12,26 +13,21 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 # Add your image sources here (URLs and/or local paths)
 image_sources = [
     # Example URLs
-    "/Users/krishankkureti/Downloads/image1.jpg"
+    "https://images.unsplash.com/photo-1773332598451-8a0a59941912?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 ]
 # ===== END IMAGE SOURCES CONFIGURATION =====
-'''
-    "https://images.unsplash.com/photo-1773645451271-cdc31a13a37c?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw4MXx8fGVufDB8fHx8fA%3D%3D",
-    "https://plus.unsplash.com/premium_photo-1773772043226-4593c04e52b9?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2NXx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1761839258420-5c3e2f2e2a74?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2Mnx8fGVufDB8fHx8fA%3D%3D" 
-'''
 
 def pick_vibe():
     """Let the user choose a vibe for their caption."""
-    vibes = ["playful", "short and sweet", "chill"]
+    vibes = ["playful", "short and sweet", "chill", "cinematic"]
     print("\n🎭 Choose a vibe for your caption:")
     for i, vibe in enumerate(vibes, start=1):
         print(f"  {i}. {vibe.capitalize()}")
     while True:
-        choice = input("\nEnter your choice (1-3): ").strip()
-        if choice in ("1", "2", "3"):
+        choice = input("\nEnter your choice (1-4): ").strip()
+        if choice in ("1", "2", "3", "4"):
             return vibes[int(choice) - 1]
-        print("Invalid choice. Please enter 1, 2, or 3.")
+        print("Invalid choice. Please enter 1, 2, 3, or 4.")
 
 def stylize_caption(caption, vibe):
     """
@@ -39,7 +35,7 @@ def stylize_caption(caption, vibe):
 
     Args:
         caption (str): The original caption to stylize.
-        vibe (str): The chosen vibe ('playful', 'short and sweet', or 'chill').
+        vibe (str): The chosen vibe ('playful', 'short and sweet', 'chill', or 'cinematic').
 
     Returns:
         list[str]: 3 stylized captions.
@@ -118,6 +114,10 @@ def run_pipeline():
             print("\n📱 Your Caption Options:")
             for i, cap in enumerate(stylized_captions, start=1):
                 print(f"  {i}. {cap}")
+
+            # Step 4: OpenCV image editing pipeline
+            output_path = f"output/image{idx}_edited.jpg"
+            run_cv_edit(image, best_caption, vibe, output_path)
 
         except Exception as e:
             print(f"❌ Error processing image: {str(e)}")
