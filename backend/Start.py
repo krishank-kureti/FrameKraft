@@ -1,57 +1,69 @@
 from Clip import load_clip_model, load_image as load_image_clip, classify_image
 from Blip import load_blip_model, load_image as load_image_blip, generate_captions
 from CvEdit import run_cv_edit
+from MusicRag import recommend_songs
 import torch
-import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+MODEL = "llama-3.3-70b-versatile"
 
 # ===== IMAGE SOURCES CONFIGURATION =====
 # Add your image sources here (URLs and/or local paths)
 image_sources = [
     # Example URLs
-    "https://images.unsplash.com/photo-1773332598451-8a0a59941912?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    "https://images.unsplash.com/photo-1590107110321-cca1bc307cc7?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 ]
 # ===== END IMAGE SOURCES CONFIGURATION =====
 
-def pick_vibe():
-    """Let the user choose a vibe for their caption."""
-    vibes = ["playful", "short and sweet", "chill", "cinematic"]
-    print("\n🎭 Choose a vibe for your caption:")
-    for i, vibe in enumerate(vibes, start=1):
-        print(f"  {i}. {vibe.capitalize()}")
+def pick_mood():
+    """Let the user specify the mood/tone for their caption."""
+    print("\n🎭 What mood should the captions have?")
+    print("  (e.g. playful, melancholic, dramatic, mysterious, romantic, energetic...)")
     while True:
-        choice = input("\nEnter your choice (1-4): ").strip()
-        if choice in ("1", "2", "3", "4"):
-            return vibes[int(choice) - 1]
-        print("Invalid choice. Please enter 1, 2, 3, or 4.")
+        mood = input("\nEnter a mood: ").strip()
+        if mood:
+            return mood
+        print("Please enter a mood.")
 
-def stylize_caption(caption, vibe):
+def pick_vibe():
+    """Let the user specify a vibe for image editing."""
+    print("\n🎨 What vibe should the image editing have?")
+    print("  (e.g. cinematic, warm, cool, moody, vintage, high contrast...)")
+    while True:
+        vibe = input("\nEnter a vibe: ").strip()
+        if vibe:
+            return vibe
+        print("Please enter a vibe.")
+
+def stylize_caption(caption, mood):
     """
-    Generate 3 stylized Instagram-style captions using Google Gemini 2.5 Flash.
+    Generate 3 stylized Instagram-style captions using Groq llama-3.3-70b-versatile.
 
     Args:
         caption (str): The original caption to stylize.
-        vibe (str): The chosen vibe ('playful', 'short and sweet', 'chill', or 'cinematic').
+        mood (str): The chosen mood for the caption (e.g. playful, dramatic, mysterious).
 
     Returns:
         list[str]: 3 stylized captions.
     """
-    model = genai.GenerativeModel("gemini-2.5-flash")
-
     prompt = (
         f"Given the image caption: '{caption}', generate exactly 3 different Instagram "
-        f"post captions with a '{vibe}' vibe. Each caption should include emojis and "
+        f"post captions with a '{mood}' mood. Each caption should include emojis and "
         f"hashtags. Number them 1, 2, 3. Output only the numbered captions, nothing else."
     )
 
-    response = model.generate_content(prompt)
+    response = groq_client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    text = response.choices[0].message.content.strip()
 
     # Parse numbered lines from the response
-    lines = response.text.strip().split("\n")
+    lines = text.split("\n")
     captions = []
     for line in lines:
         line = line.strip()
@@ -63,8 +75,8 @@ def stylize_caption(caption, vibe):
     return captions[:3]
 
 def run_pipeline():
-    """Run the complete BLIP → CLIP pipeline"""
-    print("🚀 Starting BLIP → CLIP Pipeline")
+    """Run the complete five-stage pipeline"""
+    print("🚀 Starting FrameKraft Pipeline")
     print(f"📊 Processing {len(image_sources)} image(s)")
     print("="*80)
 
@@ -106,24 +118,39 @@ def run_pipeline():
 
             print(f"\n🏆 Best matching caption: '{captions[top_indices[0]]}' with {probabilities[top_indices[0]].item()*100:.1f}% confidence")
 
-            # Step 3: Pick a vibe, then generate stylized captions using Gemini
+            # Step 3: Pick a mood for the caption, then generate captions with Gemini
             best_caption = captions[top_indices[0]]
-            vibe = pick_vibe()
-            print(f"\n🎨 Generating 3 '{vibe}' captions with Gemini...")
-            stylized_captions = stylize_caption(best_caption, vibe)
+            mood = pick_mood()
+            print(f"\n🎨 Generating 3 '{mood}' captions with Groq...")
+            stylized_captions = stylize_caption(best_caption, mood)
             print("\n📱 Your Caption Options:")
             for i, cap in enumerate(stylized_captions, start=1):
                 print(f"  {i}. {cap}")
 
-            # Step 4: OpenCV image editing pipeline
+            # Step 4: Pick a vibe for image editing, then apply OpenCV filters
+            edit_vibe = pick_vibe()
             output_path = f"output/image{idx}_edited.jpg"
-            run_cv_edit(image, best_caption, vibe, output_path)
+            run_cv_edit(image, best_caption, edit_vibe, output_path)
+
+            # Step 5: Music recommendations
+            print("\n🎵 Finding song recommendations...")
+            song_recs = recommend_songs(best_caption, mood, edit_vibe, k=5)
+            print("\n🎶 Song Recommendations:")
+            for i, song in enumerate(song_recs, start=1):
+                print(f"  {i}. {song['title']} — {song['artist']}")
+                print(f"     Genre: {song['genre']}")
+                if song["tags"]:
+                    print(f"     Tags: {song['tags']}")
+                if song.get("preview_url"):
+                    print(f"     🎵 Preview: {song['preview_url']}")
+                else:
+                    print(f"     🎵 Preview: Not available")
 
         except Exception as e:
             print(f"❌ Error processing image: {str(e)}")
 
     print(f"\n{'='*80}")
-    print("🎉 BLIP → CLIP Pipeline Complete!")
+    print("🎉 FrameKraft Pipeline Complete!")
     print(f"✅ Successfully processed {len(image_sources)} image(s)")
     print('='*80)
 

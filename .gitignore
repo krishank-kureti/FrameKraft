@@ -50,3 +50,6 @@ uploads/
 #AI agent
 .ocignore
 AGENTS.md
+
+# Million Song Dataset - raw data
+backend/data/music/

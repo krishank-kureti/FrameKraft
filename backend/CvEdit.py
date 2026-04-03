@@ -2,7 +2,13 @@ import cv2
 import numpy as np
 import json
 import os
-import google.generativeai as genai
+from groq import Groq
+from dotenv import load_dotenv
+import os as _os
+
+load_dotenv()
+groq_client = Groq(api_key=_os.getenv("GROQ_API_KEY"))
+MODEL = "llama-3.3-70b-versatile"
 from PIL import Image
 
 # ===== COMMAND LIBRARY =====
@@ -41,102 +47,60 @@ EDIT_LIBRARY = {
     "vignette": {
         "description": "Darken edges toward the center of the image",
         "params": {"intensity": "float, 0.0 to 1.0"}
-    },
-    "crop_center": {
-        "description": "Center crop to a target aspect ratio",
-        "params": {"ratio": "string, one of '1:1', '4:5', '16:9', '9:16', '4:3'"}
-    },
-    "resize": {
-        "description": "Resize the image to exact dimensions",
-        "params": {"width": "int", "height": "int"}
     }
 }
-# ===== END COMMAND LIBRARY =====
 
-# ===== VIBE TEMPLATES =====
-# Preset OpenCV command lists per vibe for consistent results.
-# Used as a starting point in the hybrid approach (Gemini adapts based on image).
-
-VIBE_TEMPLATES = {
-    "playful": [
-        {"command": "adjust_saturation", "params": {"value": 1.5}},
-        {"command": "adjust_brightness", "params": {"value": 15}},
-        {"command": "adjust_contrast", "params": {"value": 1.2}},
-    ],
-    "short and sweet": [
-        {"command": "sharpen", "params": {"strength": 1.0}},
-        {"command": "adjust_contrast", "params": {"value": 1.1}},
-        {"command": "crop_center", "params": {"ratio": "4:5"}},
-    ],
-    "chill": [
-        {"command": "adjust_temperature", "params": {"value": -15}},
-        {"command": "adjust_saturation", "params": {"value": 0.8}},
-        {"command": "gaussian_blur", "params": {"kernel_size": 5}},
-    ],
-    "cinematic": [
-        {"command": "crop_center", "params": {"ratio": "4:5"}},
-        {"command": "adjust_contrast", "params": {"value": 1.3}},
-        {"command": "adjust_saturation", "params": {"value": 0.7}},
-        {"command": "adjust_temperature", "params": {"value": -20}},
-        {"command": "vignette", "params": {"intensity": 0.6}},
-    ]
-}
-# ===== END VIBE TEMPLATES =====
+ALLOWED_EDIT_COMMANDS = list(EDIT_LIBRARY.keys())
 
 
-def get_edit_commands(image, caption, vibe):
+def get_edit_commands(caption, vibe):
     """
-    Send the image + caption + vibe to Gemini and get back a list of edit commands.
-    Uses a hybrid approach: starts with VIBE_TEMPLATES as a base, then Gemini adapts
-    based on the image content.
+    Send the caption + vibe to Groq and get back a list of edit commands.
+    Groq picks from EDIT_LIBRARY. No crop or resize — filters and adjustments only.
 
     Args:
-        image (PIL.Image): The original image to edit.
         caption (str): The BLIP-generated caption.
-        vibe (str): The chosen vibe ('playful', 'short and sweet', 'chill', 'cinematic').
+        vibe (str): The chosen vibe for image editing.
 
     Returns:
         list[dict]: List of {"command": str, "params": dict} objects.
     """
-    model = genai.GenerativeModel("gemini-2.5-flash")
-
     library_json = json.dumps(EDIT_LIBRARY, indent=2)
 
-    # Get base template for this vibe
-    template = VIBE_TEMPLATES.get(vibe, [])
-    template_json = json.dumps(template, indent=2)
-
-    # Hybrid prompt: use template as seed, let Gemini adapt to image content
     prompt = (
-        f"You are an image editing assistant. Given the image below with caption: "
-        f"\"{caption}\", create 2-5 edit commands for a '{vibe}' vibe.\n\n"
-        f"Starting point (adjust if needed based on image content):\n{template_json}\n\n"
-        f"Allowed commands from library:\n{library_json}\n\n"
+        f"You are an image editing assistant. Given the image caption: "
+        f"\"{caption}\", suggest 2-5 filter adjustments to give the image a '{vibe}' vibe.\n\n"
+        f"Do NOT crop, resize, or change the image dimensions in any way.\n"
+        f"Only use these commands (all are filter/colour adjustments):\n{library_json}\n\n"
         f"Rules:\n"
-        f"- Use the template as a starting point\n"
-        f"- If the template works for this image, keep it as-is or tweak values\n"
-        f"- If the image needs different edits, adapt intelligently\n"
         f"- Return ONLY a JSON array, no markdown fences, no explanation.\n"
         f"- Each element: {{\"command\": \"name\", \"params\": {{...}}}}\n"
+        f"- Do NOT use crop_center or resize.\n"
         f"- Ensure all parameter values are within the specified ranges.\n"
         f"- For kernel_size, always use an odd number."
     )
 
-    response = model.generate_content([image, prompt])
-    raw = response.text.strip()
+    response = groq_client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = response.choices[0].message.content.strip()
 
-    # Strip markdown fences if Gemini wraps the response anyway
     if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1]       # drop first line (```json or ```)
-        raw = raw.rsplit("```", 1)[0]     # drop trailing ```
+        raw = raw.split("\n", 1)[1]
+        raw = raw.rsplit("```", 1)[0]
 
     raw = raw.strip()
 
     try:
         commands = json.loads(raw)
     except json.JSONDecodeError:
-        print(f"❌ Failed to parse Gemini response as JSON:\n{raw}")
+        print(f"❌ Failed to parse Groq response as JSON:\n{raw}")
         return []
+
+    # Filter out any crop/resize commands Gemini might suggest
+    forbidden = {"crop_center", "resize"}
+    commands = [cmd for cmd in commands if cmd.get("command", "") not in forbidden]
 
     return commands
 
@@ -263,14 +227,6 @@ def apply_edit_commands(pil_image, commands):
                 intensity = float(params["intensity"])
                 img = apply_vignette(img, intensity)
 
-            elif name == "crop_center":
-                img = center_crop(img, params["ratio"])
-
-            elif name == "resize":
-                w = int(params["width"])
-                h = int(params["height"])
-                img = cv2.resize(img, (w, h))
-
             print(f"  ✅ [{i}/{len(commands)}] Applied {name} with {params}")
 
         except Exception as e:
@@ -331,7 +287,7 @@ def show_before_after(original, edited, output_path):
 
 def run_cv_edit(image, caption, vibe, output_path="output/edited_image.jpg"):
     """
-    Standalone entry point: get edit commands from Gemini, apply them, show result.
+    Standalone entry point: get edit commands from Groq, apply them, show result.
 
     Args:
         image (PIL.Image): The original image.
@@ -339,8 +295,8 @@ def run_cv_edit(image, caption, vibe, output_path="output/edited_image.jpg"):
         vibe (str): The chosen vibe.
         output_path (str): Where to save the edited image.
     """
-    print(f"\n🎨 Requesting '{vibe}' edit commands from Gemini...")
-    commands = get_edit_commands(image, caption, vibe)
+    print(f"\n🎨 Requesting '{vibe}' edit commands from Groq...")
+    commands = get_edit_commands(caption, vibe)
 
     if not commands:
         print("⚠️  No commands returned. Skipping image edits.")
