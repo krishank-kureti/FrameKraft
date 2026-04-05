@@ -25,11 +25,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application source code
 COPY backend/ ./
 
-# Copy frontend files
-COPY frontend/ /app/frontend/
-
 # Expose the FastAPI port
-EXPOSE 8000
+EXPOSE 10000
 
 # Start the FastAPI server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
