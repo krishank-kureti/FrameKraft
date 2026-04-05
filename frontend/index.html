@@ -1013,10 +1013,6 @@ function populateResults(data) {
   if (downloadBtn && editSrc) {
     downloadBtn.style.display = 'block';
   }
-  var downloadBtn = document.getElementById('downloadBtn');
-  if (downloadBtn && editSrc) {
-    downloadBtn.style.display = 'block';
-  }
 
   var baBefore = document.querySelector('.ba-before');
   var baAfter = document.getElementById('baAfter');
@@ -1217,34 +1213,6 @@ function stopTrack() {
   bar.classList.remove('visible');
   prog.style.width = '0%';
   currentTrack = null;
-}
-
-// ── Download edited image ────────────────────────────────
-function downloadEditedImage() {
-  if (!editedImageDataUrl) {
-    alert('No edited image available to download.');
-    return;
-  }
-  var a = document.createElement('a');
-  a.href = editedImageDataUrl;
-  a.download = 'framekraft_edited.jpg';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// ── Download edited image ────────────────────────────────
-function downloadEditedImage() {
-  if (!editedImageDataUrl) {
-    alert('No edited image available to download.');
-    return;
-  }
-  var a = document.createElement('a');
-  a.href = editedImageDataUrl;
-  a.download = 'framekraft_edited.jpg';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }
 
 // ── Caption selection ────────────────────────────────────

@@ -18,5 +18,10 @@ app.add_middleware(
 async def health_check():
     return {"status": "healthy", "service": "FrameKraft Brain"}
 
+# Root endpoint for Render's default health check
+@app.get("/")
+async def root_health():
+    return {"status": "healthy", "service": "FrameKraft Brain"}
+
 # Your actual ML logic
 app.include_router(pipeline_router)
