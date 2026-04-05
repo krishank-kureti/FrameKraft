@@ -891,6 +891,7 @@ html, body {
 
 <script>
 // ── Navigation ──────────────────────────────────────────
+const BACKEND_BASE = 'https://framekraft.onrender.com'; 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   var s = document.getElementById(id);
@@ -974,7 +975,7 @@ function runPipeline() {
   form.append('mood', mood);
   form.append('vibe', vibe);
 
-  fetch('/api/pipeline', {
+  fetch(`${BACKEND_BASE}/api/pipeline`, {
     method: 'POST',
     body: form
   })
