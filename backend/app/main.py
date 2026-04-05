@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
+from app.api.pipeline import router as pipeline_router
 
-app = FastAPI(title="FrameKraft", version="0.1.0")
+app = FastAPI(title="FrameKraft API", version="0.1.0")
 
+# KEEP THIS: It allows your Vercel frontend to talk to this Render backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,13 +13,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
-app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+# A simple health check so you know the server is alive
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "FrameKraft Brain"}
 
-from app.api.pipeline import router as pipeline_router
+# Your actual ML logic
 app.include_router(pipeline_router)
-
-@app.get("/")
-async def root():
-    index_path = os.path.join(frontend_dir, "framekraft.html")
-    return FileResponse(index_path)
