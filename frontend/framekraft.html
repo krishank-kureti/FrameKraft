@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FrameKraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0a0a;
+  --bg2:       #111111;
+  --bg3:       #171717;
+  --border:    #1f1f1f;
+  --border2:   #2a2a2a;
+  --orange:    #c94f1a;
+  --orange2:   #e05a20;
+  --orange-dim:#6e2a0d;
+  --text:      #e8e2d8;
+  --text2:     #888070;
+  --text3:     #3a3530;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── SCREENS ─────────────────────────────── */
+.screen {
+  display: none;
+  width: 100%;
+  min-height: 100vh;
+  animation: fadeIn .6s ease both;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+
+/* ─── SCREEN 1: SPLASH ─────────────────────── */
+#screen-splash {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-noise {
+  position: absolute; inset: 0; pointer-events: none; opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+.splash-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201,79,26,.08);
+  animation: expandRing 4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes expandRing {
+  0%   { opacity: .6; transform: scale(.4); }
+  100% { opacity: 0;  transform: scale(2.4); }
+}
+
+.logo-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+  animation: scaleIn 1s ease .2s both;
+}
+
+/* SVG logo drawn in code — camera/eye icon matching FocusFrame style */
+.logo-icon-svg {
+  width: 96px; height: 64px;
+}
+
+.logo-wordmark {
+  display: flex; align-items: center; gap: 0;
+  letter-spacing: .28em;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 20px;
+  color: #fff;
+  text-transform: uppercase;
+}
+.logo-wordmark .dot-accent {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  margin: 0 1px;
+  transform: translateY(-1px);
+}
+
+.splash-hint {
+  margin-top: 56px;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: .16em;
+  font-family: 'DM Mono', monospace;
+  animation: pulse 2s ease 1.5s infinite;
+}
+
+/* ─── SHARED NAV ────────────────────────────── */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 32px;
+  background: rgba(10,10,10,.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.nav-logo-icon { width: 32px; height: 22px; }
+.nav-wordmark {
+  letter-spacing: .22em;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300; font-size: 13px;
+  color: #fff; text-transform: uppercase;
+}
+.nav-wordmark .dot-accent {
+  display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--orange); margin: 0 1px; transform: translateY(-1px);
+}
+.nav-step {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--text3); letter-spacing: .1em;
+}
+.nav-step span { color: var(--orange); }
+
+/* ─── SCREEN 2: UPLOAD ──────────────────────── */
+#screen-upload {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 32px 60px;
+  min-height: 100vh;
+}
+
+.upload-hero {
+  text-align: center; margin-bottom: 48px;
+  animation: fadeUp .7s ease .1s both;
+}
+.upload-hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 300; font-style: italic;
+  color: var(--text); line-height: 1.2;
+  margin-bottom: 12px;
+}
+.upload-hero p {
+  font-size: 13px; color: var(--text2);
+  letter-spacing: .06em;
+}
+
+.dropzone {
+  width: min(480px, 100%);
+  border: 1.5px dashed var(--border2);
+  border-radius: 20px;
+  padding: 56px 32px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  cursor: pointer; background: var(--bg2);
+  transition: border-color .25s, background .25s;
+  animation: fadeUp .7s ease .25s both;
+  position: relative; overflow: hidden;
+}
+.dropzone::after {
+  content: ''; position: absolute; inset: 0; border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 120%, rgba(201,79,26,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.dropzone:hover { border-color: var(--orange); background: #131313; }
+.dropzone.dragging { border-color: var(--orange2); background: #131313; }
+
+.dz-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+}
+.dz-icon svg { width: 22px; height: 22px; stroke: var(--text2); fill: none; stroke-width: 1.5; }
+.dz-title { font-size: 15px; color: var(--text); font-weight: 400; }
+.dz-sub { font-size: 12px; color: var(--text3); }
+.dz-or { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.dz-btn {
+  padding: 9px 24px; border-radius: 99px;
+  border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text2);
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  cursor: pointer; transition: all .2s;
+}
+.dz-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ─── SCREEN 3: MOOD / VIBE ──────────────────── */
+#screen-mood {
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 120px 32px 60px; min-height: 100vh;
+}
+
+.mood-hero {
+  text-align: center; margin-bottom: 48px;
+  animation: fadeUp .7s ease .1s both;
+}
+.mood-hero h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 300; font-style: italic;
+  color: var(--text); margin-bottom: 10px;
+}
+.mood-hero p { font-size: 13px; color: var(--text2); }
+
+.mood-preview-thumb {
+  width: 80px; height: 60px; border-radius: 8px;
+  object-fit: cover; border: 1px solid var(--border);
+  display: block; margin: 0 auto 32px;
+}
+.mood-form {
+  width: min(520px, 100%);
+  display: flex; flex-direction: column; gap: 20px;
+  animation: fadeUp .7s ease .2s both;
+}
+.field-group { display: flex; flex-direction: column; gap: 7px; }
+.field-label {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--text3); letter-spacing: .18em; text-transform: uppercase;
+}
+.field-input {
+  width: 100%; background: var(--bg2);
+  border: 1px solid var(--border2); border-radius: 12px;
+  padding: 13px 16px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: border-color .2s, background .2s;
+  resize: none; height: 60px;
+}
+.field-input::placeholder { color: var(--text3); }
+.field-input:focus { border-color: var(--orange); background: #111; }
+
+.field-hint {
+  font-size: 11px; color: var(--text3);
+  font-style: italic;
+}
+
+.run-btn {
+  width: 100%; padding: 14px;
+  border-radius: 12px; border: none;
+  background: var(--orange);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 14px;
+  cursor: pointer; letter-spacing: .03em;
+  transition: background .2s, transform .1s;
+  margin-top: 8px;
+}
+.run-btn:hover { background: var(--orange2); }
+.run-btn:active { transform: scale(.99); }
+
+/* ─── SCREEN 4: PROCESSING ───────────────────── */
+#screen-processing {
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px; gap: 32px; min-height: 100vh;
+}
+.proc-spinner {
+  width: 48px; height: 48px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.proc-steps { display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.proc-step {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--text3); letter-spacing: .1em;
+  transition: color .4s;
+}
+.proc-step.active { color: var(--orange); }
+.proc-step.done { color: var(--text2); }
+.proc-step.done::before { content: '✓  '; color: var(--orange); }
+
+/* ─── SCREEN 5: RESULTS ──────────────────────── */
+#screen-results {
+  flex-direction: column;
+  padding: 80px 0 60px;
+  min-height: 100vh;
+}
+
+.results-inner {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex; flex-direction: column; gap: 48px;
+}
+
+/* image info strip */
+.result-meta {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg2); border-radius: 12px;
+  border: 1px solid var(--border);
+  animation: fadeUp .6s ease both;
+}
+.result-thumb {
+  width: 60px; height: 44px; border-radius: 6px;
+  background: var(--bg3); border: 1px solid var(--border);
+  object-fit: cover; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text3);
+}
+.result-meta-text { flex: 1; }
+.result-meta-title { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.result-meta-sub { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; }
+.result-restart {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--text3); cursor: pointer; letter-spacing: .08em;
+  border: 1px solid var(--border); padding: 6px 12px; border-radius: 99px;
+  background: transparent; transition: all .2s;
+}
+.result-restart:hover { border-color: var(--orange); color: var(--orange); }
+
+/* section header */
+.sec-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.sec-num {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--orange); letter-spacing: .12em;
+}
+.sec-title {
+  font-size: 11px; color: var(--text3);
+  letter-spacing: .14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+}
+
+/* captions */
+.captions-section { animation: fadeUp .6s ease .1s both; }
+.caption-card {
+  padding: 18px 20px;
+  background: var(--bg2); border-radius: 14px;
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease, border-color .2s;
+  cursor: pointer;
+}
+.caption-card.show { opacity: 1; transform: translateY(0); }
+.caption-card:hover { border-color: var(--orange-dim); }
+.caption-card.selected { border-color: var(--orange); background: #131313; }
+.caption-idx {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  color: var(--orange); letter-spacing: .12em; margin-bottom: 6px;
+}
+.caption-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 19px; font-weight: 300; font-style: italic;
+  color: var(--text); line-height: 1.5;
+}
+.caption-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.ctag {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  padding: 3px 9px; border-radius: 99px;
+  border: 1px solid var(--border2); color: var(--text3);
+}
+
+/* before/after slider */
+.slider-section { animation: fadeUp .6s ease .2s both; }
+.ba-container {
+  position: relative; border-radius: 16px; overflow: hidden;
+  height: 320px; background: var(--bg2); border: 1px solid var(--border);
+  cursor: col-resize; user-select: none;
+}
+.ba-before, .ba-after {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ba-before { background: #1a1a1a; }
+.ba-after {
+  background: #0d1a14;
+  clip-path: inset(0 50% 0 0);
+  transition: clip-path 0s;
+}
+.ba-bg-text {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: .14em; color: #2a2a2a; text-transform: uppercase;
+}
+/* fake image mockup inside panels */
+.ba-image-mock {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ba-label {
+  position: absolute; bottom: 12px;
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 99px;
+  border: 1px solid currentColor;
+}
+.ba-before .ba-label { left: 12px; color: #333; }
+.ba-after .ba-label { left: 12px; color: var(--orange-dim); }
+
+.ba-divider {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: var(--orange); left: 50%;
+  transform: translateX(-50%); pointer-events: none;
+  box-shadow: 0 0 8px rgba(201,79,26,.4);
+}
+.ba-handle {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--orange);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(201,79,26,.3);
+}
+.ba-handle svg { width: 14px; height: 14px; stroke: var(--orange); fill: none; stroke-width: 2; }
+.ba-range {
+  width: 100%; accent-color: var(--orange); margin-top: 12px;
+  cursor: pointer;
+}
+.ba-range-labels {
+  display: flex; justify-content: space-between;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--text3); margin-top: 6px;
+}
+
+/* filter badges */
+.filter-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.fbadge {
+  padding: 5px 12px; border-radius: 99px;
+  border: 1px solid var(--border2);
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text2);
+  background: var(--bg2);
+}
+.fbadge .val { color: var(--orange); margin-left: 4px; }
+
+/* music */
+.music-section { animation: fadeUp .6s ease .3s both; }
+.music-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px; border-radius: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  margin-bottom: 8px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .5s ease, transform .5s ease, border-color .2s, background .2s;
+}
+.music-card.show { opacity: 1; transform: translateY(0); }
+.music-card:hover { border-color: var(--orange-dim); background: #111; }
+.music-rank {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--text3); min-width: 18px;
+}
+.music-art {
+  width: 40px; height: 40px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.music-art svg { width: 14px; height: 14px; stroke: var(--text3); fill: none; stroke-width: 1.5; }
+.music-info { flex: 1; }
+.music-name { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+.music-artist { font-size: 11px; color: var(--text2); }
+.music-tags { display: flex; gap: 5px; margin-top: 4px; }
+.mtag {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  padding: 2px 7px; border-radius: 99px;
+  border: 1px solid var(--border); color: var(--text3);
+}
+
+/* play button */
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s;
+}
+.play-btn:hover { background: var(--orange); border-color: var(--orange); }
+.play-btn:hover svg { stroke: #fff; }
+.play-btn svg { width: 11px; height: 11px; fill: var(--orange); stroke: none; margin-left: 1px; }
+.play-btn.playing { background: var(--orange); border-color: var(--orange); }
+.play-btn.playing svg { fill: #fff; }
+
+/* waveform bars */
+.waveform {
+  display: flex; align-items: center; gap: 2px;
+  height: 16px; margin-left: 6px;
+}
+.wbar {
+  width: 2px; border-radius: 1px; background: var(--orange);
+  animation: waveAnim .6s ease infinite alternate;
+}
+.wbar:nth-child(1) { animation-delay: 0s; }
+.wbar:nth-child(2) { animation-delay: .1s; }
+.wbar:nth-child(3) { animation-delay: .2s; }
+.wbar:nth-child(4) { animation-delay: .3s; }
+.wbar:nth-child(5) { animation-delay: .4s; }
+@keyframes waveAnim {
+  from { height: 4px; }
+  to { height: 14px; }
+}
+
+/* preview bar for playing track */
+.preview-bar {
+  width: 100%; height: 2px; background: var(--border2);
+  border-radius: 1px; margin-top: 10px; overflow: hidden;
+  display: none;
+}
+.preview-bar.visible { display: block; }
+.preview-progress {
+  height: 100%; background: var(--orange);
+  border-radius: 1px; width: 0%;
+  transition: width .1s linear;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══ SCREEN 1: SPLASH ══════════════════════════════ -->
+<div class="screen active" id="screen-splash">
+  <div class="splash-noise"></div>
+  <div class="splash-ring" style="width:300px;height:300px;animation-delay:0s"></div>
+  <div class="splash-ring" style="width:300px;height:300px;animation-delay:1.3s"></div>
+  <div class="splash-ring" style="width:300px;height:300px;animation-delay:2.6s"></div>
+
+  <div class="logo-wrap">
+    <!-- Camera/eye icon replicating FocusFrame style in FrameKraft colours -->
+    <svg class="logo-icon-svg" viewBox="0 0 96 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- outer rounded rect frame -->
+      <rect x="8" y="10" width="80" height="44" rx="10" stroke="white" stroke-width="1.5" fill="none"/>
+      <!-- inner ellipse (eye/lens shape) -->
+      <ellipse cx="48" cy="32" rx="20" ry="15" stroke="white" stroke-width="1.5" fill="none"/>
+      <!-- center dot -->
+      <circle cx="48" cy="32" r="5" fill="white"/>
+      <!-- corner arrows (like FocusFrame) -->
+      <path d="M12 18 L8 10 L16 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M84 18 L88 10 L80 10" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M12 46 L8 54 L16 54" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <path d="M84 46 L88 54 L80 54" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+
+    <div class="logo-wordmark">
+      FRAME<span class="dot-accent"></span>KRAFT
+    </div>
+  </div>
+
+  <div class="splash-hint">tap anywhere to begin</div>
+</div>
+
+<!-- ══ SCREEN 2: UPLOAD ══════════════════════════════ -->
+<div class="screen" id="screen-upload" style="flex-direction:column">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="goSplash()">
+      <svg class="nav-logo-icon" viewBox="0 0 96 64" fill="none">
+        <rect x="8" y="10" width="80" height="44" rx="10" stroke="white" stroke-width="1.8" fill="none"/>
+        <ellipse cx="48" cy="32" rx="20" ry="15" stroke="white" stroke-width="1.8" fill="none"/>
+        <circle cx="48" cy="32" r="5" fill="white"/>
+        <path d="M12 18 L8 10 L16 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 18 L88 10 L80 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M12 46 L8 54 L16 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 46 L88 54 L80 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="nav-wordmark">FRAME<span class="dot-accent"></span>KRAFT</div>
+    </div>
+    <div class="nav-step">step <span>01</span> / 03</div>
+  </nav>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 32px 60px">
+    <div class="upload-hero">
+      <h1>Drop your image.</h1>
+      <p>The pipeline will caption, edit, and find music to match</p>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="dz-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div class="dz-title">Drag &amp; drop image here</div>
+      <div class="dz-sub">or</div>
+      <label class="dz-btn" for="fileInput">Choose file</label>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <div class="dz-sub" style="margin-top:4px">JPG · PNG · WEBP</div>
+    </div>
+
+    <!-- skip/demo button removed — upload required -->
+    <div style="margin-top:24px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:.08em">
+      image upload required to continue
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: MOOD & VIBE ══════════════════════════ -->
+<div class="screen" id="screen-mood" style="flex-direction:column">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="goSplash()">
+      <svg class="nav-logo-icon" viewBox="0 0 96 64" fill="none">
+        <rect x="8" y="10" width="80" height="44" rx="10" stroke="white" stroke-width="1.8" fill="none"/>
+        <ellipse cx="48" cy="32" rx="20" ry="15" stroke="white" stroke-width="1.8" fill="none"/>
+        <circle cx="48" cy="32" r="5" fill="white"/>
+        <path d="M12 18 L8 10 L16 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 18 L88 10 L80 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M12 46 L8 54 L16 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 46 L88 54 L80 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="nav-wordmark">FRAME<span class="dot-accent"></span>KRAFT</div>
+    </div>
+    <div class="nav-step">step <span>02</span> / 03</div>
+  </nav>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 32px 60px">
+    <div class="mood-hero">
+      <h2>Set the tone.</h2>
+      <p>Tell the AI how this image should feel</p>
+    </div>
+
+    <div class="mood-form">
+      <div class="field-group">
+        <label class="field-label">mood</label>
+        <textarea class="field-input" id="moodInput" placeholder="e.g. melancholic, eerie, joyful, restless…"></textarea>
+        <div class="field-hint">How does this image make you feel?</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">vibe</label>
+        <textarea class="field-input" id="vibeInput" placeholder="e.g. cinematic, warm grain, high contrast, 70s Kodak…"></textarea>
+        <div class="field-hint">Describe the edit style you're going for</div>
+      </div>
+      <button class="run-btn" onclick="runPipeline()">Run Pipeline →</button>
+      <button onclick="goUpload()" style="padding:9px;border:none;background:transparent;color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">← back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 4: PROCESSING ══════════════════════════ -->
+<div class="screen" id="screen-processing" style="background:var(--bg)">
+  <div class="proc-spinner"></div>
+  <div class="proc-steps" id="procSteps">
+    <div class="proc-step" id="ps1">BLIP — generating caption</div>
+    <div class="proc-step" id="ps2">CLIP — zero-shot classification</div>
+    <div class="proc-step" id="ps3">Groq — stylizing captions</div>
+    <div class="proc-step" id="ps4">OpenCV — applying edits</div>
+    <div class="proc-step" id="ps5">MusicRAG — finding tracks</div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 5: RESULTS ══════════════════════════════ -->
+<div class="screen" id="screen-results" style="flex-direction:column">
+  <nav class="topnav">
+    <div class="nav-logo" onclick="goSplash()">
+      <svg class="nav-logo-icon" viewBox="0 0 96 64" fill="none">
+        <rect x="8" y="10" width="80" height="44" rx="10" stroke="white" stroke-width="1.8" fill="none"/>
+        <ellipse cx="48" cy="32" rx="20" ry="15" stroke="white" stroke-width="1.8" fill="none"/>
+        <circle cx="48" cy="32" r="5" fill="white"/>
+        <path d="M12 18 L8 10 L16 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 18 L88 10 L80 10" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M12 46 L8 54 L16 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M84 46 L88 54 L80 54" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="nav-wordmark">FRAME<span class="dot-accent"></span>KRAFT</div>
+    </div>
+    <div class="nav-step">step <span>03</span> / 03 — results</div>
+  </nav>
+
+  <div class="results-inner" style="margin-top:40px">
+
+    <!-- meta strip -->
+    <div class="result-meta">
+      <div class="result-thumb" id="resultThumb">img</div>
+      <div class="result-meta-text">
+        <div class="result-meta-title" id="resultFilename">demo_image.jpg</div>
+        <div class="result-meta-sub" id="resultMeta">mood: melancholic · vibe: cinematic warm grain</div>
+      </div>
+      <button class="result-restart" onclick="goUpload()">new image</button>
+    </div>
+
+    <!-- 01 — captions -->
+    <div class="captions-section">
+      <div class="sec-header">
+        <span class="sec-num">01</span>
+        <span class="sec-title">stylized captions</span>
+      </div>
+      <div class="caption-card" id="cap1">
+        <div class="caption-idx">caption 01</div>
+        <div class="caption-text">"The quiet hour before the city remembers itself"</div>
+        <div class="caption-tags">
+          <span class="ctag">blip: street at dusk</span>
+          <span class="ctag">clip: urban</span>
+          <span class="ctag">mood: melancholic</span>
+        </div>
+      </div>
+      <div class="caption-card" id="cap2">
+        <div class="caption-idx">caption 02</div>
+        <div class="caption-text">"Streets that carry the weight of unnamed goodbyes"</div>
+        <div class="caption-tags">
+          <span class="ctag">blip: empty road</span>
+          <span class="ctag">clip: solitude</span>
+        </div>
+      </div>
+      <div class="caption-card" id="cap3">
+        <div class="caption-idx">caption 03</div>
+        <div class="caption-text">"A light that forgot how to leave"</div>
+        <div class="caption-tags">
+          <span class="ctag">blip: golden hour</span>
+          <span class="ctag">vibe: cinematic</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 — before/after -->
+    <div class="slider-section">
+      <div class="sec-header">
+        <span class="sec-num">02</span>
+        <span class="sec-title">before / after edit</span>
+      </div>
+      <div class="ba-container" id="baContainer">
+        <div class="ba-before">
+          <!-- Placeholder visual — concentric circles for "before" -->
+          <svg width="100%" height="100%" viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+            <rect width="600" height="320" fill="#1a1a1a"/>
+            <circle cx="300" cy="160" r="120" fill="none" stroke="#242424" stroke-width="1"/>
+            <circle cx="300" cy="160" r="80" fill="none" stroke="#242424" stroke-width="1"/>
+            <circle cx="300" cy="160" r="40" fill="none" stroke="#242424" stroke-width="1"/>
+            <text x="300" y="165" text-anchor="middle" fill="#333" font-family="DM Mono,monospace" font-size="11" letter-spacing="4">ORIGINAL</text>
+          </svg>
+          <div class="ba-label">before</div>
+        </div>
+        <div class="ba-after" id="baAfter">
+          <!-- Placeholder visual — tinted "after" -->
+          <svg width="100%" height="100%" viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+            <rect width="600" height="320" fill="#0d1a12"/>
+            <circle cx="300" cy="160" r="120" fill="none" stroke="#1a3020" stroke-width="1"/>
+            <circle cx="300" cy="160" r="80" fill="none" stroke="#1a3020" stroke-width="1"/>
+            <circle cx="300" cy="160" r="40" fill="none" stroke="#1a3020" stroke-width="1"/>
+            <text x="300" y="158" text-anchor="middle" fill="#2a4030" font-family="DM Mono,monospace" font-size="11" letter-spacing="4">EDITED</text>
+            <text x="300" y="175" text-anchor="middle" fill="#3a6045" font-family="DM Mono,monospace" font-size="9" letter-spacing="2">desaturate +40 · cool shift · vignette</text>
+          </svg>
+          <div class="ba-label" style="color:var(--orange-dim)">after</div>
+        </div>
+        <div class="ba-divider" id="baDivider"></div>
+        <div class="ba-handle" id="baHandle">
+          <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/><polyline points="9,18 15,12 9,6"/></svg>
+        </div>
+      </div>
+      <input type="range" min="0" max="100" value="50" step="1" class="ba-range" id="baRange">
+      <div class="ba-range-labels"><span>original</span><span>edited</span></div>
+      <div class="filter-badges">
+        <span class="fbadge">desaturate<span class="val">+40</span></span>
+        <span class="fbadge">cool_shift<span class="val">+15</span></span>
+        <span class="fbadge">vignette<span class="val">on</span></span>
+        <span class="fbadge">grain<span class="val">0.18</span></span>
+        <span class="fbadge">contrast<span class="val">+8</span></span>
+      </div>
+    </div>
+
+    <!-- 03 — music -->
+    <div class="music-section">
+      <div class="sec-header">
+        <span class="sec-num">03</span>
+        <span class="sec-title">music recommendations</span>
+      </div>
+
+      <div class="music-card" id="mus1">
+        <span class="music-rank">01</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">Says</div>
+          <div class="music-artist">Nils Frahm</div>
+          <div class="music-tags"><span class="mtag">ambient</span><span class="mtag">piano</span><span class="mtag">melancholic</span></div>
+        </div>
+        <div class="waveform" id="wave1" style="display:none">
+          <div class="wbar" style="height:4px"></div><div class="wbar" style="height:8px"></div>
+          <div class="wbar" style="height:12px"></div><div class="wbar" style="height:6px"></div>
+          <div class="wbar" style="height:10px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(1)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar1"><div class="preview-progress" id="prog1"></div></div>
+
+      <div class="music-card" id="mus2">
+        <span class="music-rank">02</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">Near Light</div>
+          <div class="music-artist">Ólafur Arnalds</div>
+          <div class="music-tags"><span class="mtag">neo-classical</span><span class="mtag">strings</span><span class="mtag">cinematic</span></div>
+        </div>
+        <div class="waveform" id="wave2" style="display:none">
+          <div class="wbar" style="height:6px"></div><div class="wbar" style="height:10px"></div>
+          <div class="wbar" style="height:8px"></div><div class="wbar" style="height:14px"></div>
+          <div class="wbar" style="height:4px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(2)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar2"><div class="preview-progress" id="prog2"></div></div>
+
+      <div class="music-card" id="mus3">
+        <span class="music-rank">03</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">On the Nature of Daylight</div>
+          <div class="music-artist">Max Richter</div>
+          <div class="music-tags"><span class="mtag">modern classical</span><span class="mtag">orchestral</span></div>
+        </div>
+        <div class="waveform" id="wave3" style="display:none">
+          <div class="wbar" style="height:8px"></div><div class="wbar" style="height:4px"></div>
+          <div class="wbar" style="height:12px"></div><div class="wbar" style="height:8px"></div>
+          <div class="wbar" style="height:6px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(3)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar3"><div class="preview-progress" id="prog3"></div></div>
+
+      <div class="music-card" id="mus4">
+        <span class="music-rank">04</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">Experience</div>
+          <div class="music-artist">Ludovico Einaudi</div>
+          <div class="music-tags"><span class="mtag">piano</span><span class="mtag">emotional</span><span class="mtag">minimal</span></div>
+        </div>
+        <div class="waveform" id="wave4" style="display:none">
+          <div class="wbar" style="height:10px"></div><div class="wbar" style="height:6px"></div>
+          <div class="wbar" style="height:8px"></div><div class="wbar" style="height:12px"></div>
+          <div class="wbar" style="height:4px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(4)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar4"><div class="preview-progress" id="prog4"></div></div>
+
+      <div class="music-card" id="mus5" style="display:none">
+        <span class="music-rank">05</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">—</div>
+          <div class="music-artist">—</div>
+          <div class="music-tags"></div>
+        </div>
+        <div class="waveform" id="wave5" style="display:none">
+          <div class="wbar" style="height:6px"></div><div class="wbar" style="height:10px"></div>
+          <div class="wbar" style="height:8px"></div><div class="wbar" style="height:12px"></div>
+          <div class="wbar" style="height:4px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(5)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar5" style="display:none"><div class="preview-progress" id="prog5"></div></div>
+
+      <div class="music-card" id="mus5" style="display:none">
+        <span class="music-rank">05</span>
+        <div class="music-art"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="music-info">
+          <div class="music-name">—</div>
+          <div class="music-artist">—</div>
+          <div class="music-tags"></div>
+        </div>
+        <div class="waveform" id="wave5" style="display:none">
+          <div class="wbar" style="height:6px"></div><div class="wbar" style="height:10px"></div>
+          <div class="wbar" style="height:8px"></div><div class="wbar" style="height:12px"></div>
+          <div class="wbar" style="height:4px"></div>
+        </div>
+        <button class="play-btn" onclick="togglePlay(5)">
+          <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
+      </div>
+      <div class="preview-bar" id="bar5" style="display:none"><div class="preview-progress" id="prog5"></div></div>
+
+    </div>
+
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+<script>
+// ── Navigation ──────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  var s = document.getElementById(id);
+  s.classList.add('active');
+  s.style.animation = 'none';
+  s.offsetHeight;
+  s.style.animation = 'fadeIn .6s ease both';
+  window.scrollTo(0,0);
+}
+
+function goSplash() { showScreen('screen-splash'); }
+function goUpload()  { showScreen('screen-upload'); }
+function goMood()    { showScreen('screen-mood'); }
+function goResults() { showScreen('screen-results'); }
+
+// ── Splash click ────────────────────────────────────────
+document.getElementById('screen-splash').addEventListener('click', goUpload);
+
+// ── File input ──────────────────────────────────────────
+var uploadedFile = null;
+var uploadedPreview = null;
+var fileInput = document.getElementById('fileInput');
+
+fileInput.addEventListener('change', function(e) {
+  if (e.target.files[0]) {
+    uploadedFile = e.target.files[0];
+    var reader = new FileReader();
+    reader.onload = function(ev) { uploadedPreview = ev.target.result; };
+    reader.readAsDataURL(uploadedFile);
+    goMood();
+  }
+});
+
+var dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragging'); });
+dz.addEventListener('dragleave', function() { dz.classList.remove('dragging'); });
+dz.addEventListener('drop', function(e) {
+  e.preventDefault(); dz.classList.remove('dragging');
+  if (e.dataTransfer.files[0]) {
+    uploadedFile = e.dataTransfer.files[0];
+    var reader = new FileReader();
+    reader.onload = function(ev) { uploadedPreview = ev.target.result; };
+    reader.readAsDataURL(uploadedFile);
+    goMood();
+  }
+});
+
+// ── Pipeline (real API call) ────────────────────────────
+function runPipeline() {
+  var mood = document.getElementById('moodInput').value || 'melancholic';
+  var vibe = document.getElementById('vibeInput').value || 'cinematic warm grain';
+
+  if (!uploadedFile) {
+    alert('Please upload an image first.');
+    return;
+  }
+
+  document.getElementById('resultMeta').textContent = 'mood: ' + mood + ' · vibe: ' + vibe;
+  document.getElementById('resultFilename').textContent = uploadedFile.name;
+
+  showScreen('screen-processing');
+
+  var steps = ['ps1','ps2','ps3','ps4','ps5'];
+  var delays = [0, 800, 1600, 2400, 3200];
+
+  steps.forEach(function(id, i) {
+    setTimeout(function() {
+      document.getElementById(id).classList.add('active');
+    }, delays[i]);
+    if (i > 0) {
+      setTimeout(function() {
+        document.getElementById(steps[i-1]).classList.remove('active');
+        document.getElementById(steps[i-1]).classList.add('done');
+      }, delays[i]);
+    }
+  });
+
+  var form = new FormData();
+  form.append('image', uploadedFile);
+  form.append('mood', mood);
+  form.append('vibe', vibe);
+
+  fetch('/api/pipeline', {
+    method: 'POST',
+    body: form
+  })
+  .then(function(resp) {
+    if (!resp.ok) {
+      return resp.json().then(function(err) { throw new Error(err.detail || 'Pipeline failed'); });
+    }
+    return resp.json();
+  })
+  .then(function(data) {
+    document.getElementById('ps5').classList.remove('active');
+    document.getElementById('ps5').classList.add('done');
+    populateResults(data);
+    revealResults();
+  })
+  .catch(function(err) {
+    steps.forEach(function(id) {
+      document.getElementById(id).classList.remove('active');
+      document.getElementById(id).classList.add('done');
+    });
+    alert('Error: ' + err.message);
+    goMood();
+  });
+}
+
+function populateResults(data) {
+  // Update meta
+  document.getElementById('resultFilename').textContent = uploadedFile ? uploadedFile.name : 'image';
+
+  // Before/After images
+  var origSrc = data.original_image || uploadedPreview;
+  var editSrc = data.edited_image;
+
+  var baBefore = document.querySelector('.ba-before');
+  var baAfter = document.getElementById('baAfter');
+
+  if (baBefore) {
+    baBefore.innerHTML = '<img src="' + origSrc + '" style="width:100%;height:100%;object-fit:contain;background:#1a1a1a"><div class="ba-label">before</div>';
+  }
+  if (baAfter) {
+    baAfter.innerHTML = '<img src="' + editSrc + '" style="width:100%;height:100%;object-fit:contain;background:#0d1a12"><div class="ba-label" style="color:var(--orange-dim)">after</div>';
+  }
+
+  // Filter badges
+  var badgesContainer = document.querySelector('.filter-badges');
+  if (badgesContainer && data.edit_commands && data.edit_commands.length > 0) {
+    badgesContainer.innerHTML = '';
+    data.edit_commands.forEach(function(cmd) {
+      var paramsStr = Object.keys(cmd.params).map(function(k) { return k + ':' + cmd.params[k]; }).join(' ');
+      var badge = document.createElement('span');
+      badge.className = 'fbadge';
+      badge.innerHTML = cmd.command + '<span class="val">' + paramsStr + '</span>';
+      badgesContainer.appendChild(badge);
+    });
+  }
+
+  // Captions
+  var captions = data.captions || [];
+  for (var i = 0; i < 3; i++) {
+    var capEl = document.getElementById('cap' + (i+1));
+    if (capEl) {
+      var capText = capEl.querySelector('.caption-text');
+      var capTags = capEl.querySelector('.caption-tags');
+      if (captions[i]) {
+        capText.textContent = '"' + captions[i] + '"';
+        var tags = [];
+        if (data.blip_tags && data.blip_tags[i]) tags.push('blip: ' + data.blip_tags[i]);
+        if (data.clip_confidence) tags.push('confidence: ' + data.clip_confidence.toFixed(1) + '%');
+        tags.push('mood: ' + (document.getElementById('moodInput').value || 'melancholic'));
+        capTags.innerHTML = tags.map(function(t) { return '<span class="ctag">' + t + '</span>'; }).join('');
+      } else {
+        capEl.style.display = 'none';
+      }
+    }
+  }
+
+  // Music
+  var music = data.music || [];
+  for (var j = 0; j < 5; j++) {
+    var musEl = document.getElementById('mus' + (j+1));
+    var barEl = document.getElementById('bar' + (j+1));
+    if (musEl) {
+      if (music[j]) {
+        musEl.style.display = 'flex';
+        if (barEl) barEl.style.display = 'block';
+        var nameEl = musEl.querySelector('.music-name');
+        var artistEl = musEl.querySelector('.music-artist');
+        var tagsEl = musEl.querySelector('.music-tags');
+        if (nameEl) nameEl.textContent = music[j].title;
+        if (artistEl) artistEl.textContent = music[j].artist;
+        if (tagsEl) {
+          var genreTags = (music[j].genre || '').split(',').filter(Boolean);
+          tagsEl.innerHTML = genreTags.map(function(t) { return '<span class="mtag">' + t.trim() + '</span>'; }).join('');
+        }
+        // Store preview URL for playback
+        musEl.setAttribute('data-preview', music[j].preview_url || '');
+      } else {
+        musEl.style.display = 'none';
+        if (barEl) barEl.style.display = 'none';
+      }
+    }
+  }
+}
+
+function revealResults() {
+  // Reset all animated items
+  ['cap1','cap2','cap3','mus1','mus2','mus3','mus4','mus5'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('show');
+      el.style.transitionDelay = '0s';
+    }
+  });
+  ['ps1','ps2','ps3','ps4','ps5'].forEach(function(id) {
+    document.getElementById(id).classList.remove('active','done');
+  });
+
+  showScreen('screen-results');
+
+  // Stagger captions
+  setTimeout(function() { document.getElementById('cap1').classList.add('show'); }, 200);
+  setTimeout(function() { document.getElementById('cap2').classList.add('show'); }, 500);
+  setTimeout(function() { document.getElementById('cap3').classList.add('show'); }, 800);
+
+  // Music after captions
+  setTimeout(function() { document.getElementById('mus1').classList.add('show'); }, 1400);
+  setTimeout(function() { document.getElementById('mus2').classList.add('show'); }, 1650);
+  setTimeout(function() { document.getElementById('mus3').classList.add('show'); }, 1900);
+  setTimeout(function() { document.getElementById('mus4').classList.add('show'); }, 2150);
+  setTimeout(function() { document.getElementById('mus5').classList.add('show'); }, 2400);
+}
+
+// ── Before/After Slider ──────────────────────────────────
+function updateBA(pct) {
+  pct = parseInt(pct);
+  document.getElementById('baAfter').style.clipPath = 'inset(0 ' + (100-pct) + '% 0 0)';
+  document.getElementById('baDivider').style.left = pct + '%';
+  document.getElementById('baHandle').style.left = pct + '%';
+}
+
+document.getElementById('baRange').addEventListener('input', function() { updateBA(this.value); });
+
+var baC = document.getElementById('baContainer'), baDrag = false;
+baC.addEventListener('mousedown', function() { baDrag = true; });
+document.addEventListener('mouseup',  function() { baDrag = false; });
+document.addEventListener('mousemove', function(e) {
+  if (!baDrag) return;
+  var r = baC.getBoundingClientRect();
+  var pct = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100);
+  document.getElementById('baRange').value = pct;
+  updateBA(pct);
+});
+baC.addEventListener('touchstart', function() { baDrag = true; }, {passive:true});
+document.addEventListener('touchend',  function() { baDrag = false; });
+document.addEventListener('touchmove', function(e) {
+  if (!baDrag) return;
+  var r = baC.getBoundingClientRect();
+  var pct = Math.round(Math.max(0, Math.min(1, (e.touches[0].clientX - r.left) / r.width)) * 100);
+  document.getElementById('baRange').value = pct;
+  updateBA(pct);
+}, {passive:true});
+
+// ── Music playback (real audio) ──────────────────────────
+var currentTrack = null;
+var audioPlayer = null;
+var playTimer = null;
+var playProgress = 0;
+
+function togglePlay(n) {
+  if (currentTrack === n) {
+    stopTrack();
+    return;
+  }
+  if (currentTrack) stopTrack();
+  startTrack(n);
+}
+
+function startTrack(n) {
+  var musEl = document.getElementById('mus' + n);
+  var previewUrl = musEl ? musEl.getAttribute('data-preview') : '';
+
+  if (!previewUrl) {
+    alert('No preview available for this track.');
+    return;
+  }
+
+  currentTrack = n;
+  var btn = document.querySelector('#mus' + n + ' .play-btn');
+  var wave = document.getElementById('wave' + n);
+  var bar = document.getElementById('bar' + n);
+  var prog = document.getElementById('prog' + n);
+
+  if (!audioPlayer) {
+    audioPlayer = new Audio();
+  }
+  audioPlayer.src = previewUrl;
+  audioPlayer.play();
+
+  btn.classList.add('playing');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:#fff"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+  wave.style.display = 'flex';
+  bar.classList.add('visible');
+  playProgress = 0;
+  prog.style.width = '0%';
+
+  playTimer = setInterval(function() {
+    if (audioPlayer && audioPlayer.duration) {
+      playProgress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+      prog.style.width = Math.min(100, playProgress).toFixed(1) + '%';
+    }
+    if (audioPlayer && audioPlayer.ended) stopTrack();
+  }, 100);
+}
+
+function stopTrack() {
+  if (!currentTrack) return;
+  var n = currentTrack;
+  if (audioPlayer) {
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+  }
+  clearInterval(playTimer);
+  var btn = document.querySelector('#mus' + n + ' .play-btn');
+  var wave = document.getElementById('wave' + n);
+  var bar = document.getElementById('bar' + n);
+  var prog = document.getElementById('prog' + n);
+  btn.classList.remove('playing');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:var(--orange);margin-left:1px"><polygon points="5,3 19,12 5,21"/></svg>';
+  wave.style.display = 'none';
+  bar.classList.remove('visible');
+  prog.style.width = '0%';
+  currentTrack = null;
+}
+
+// ── Caption selection ────────────────────────────────────
+['cap1','cap2','cap3'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('click', function() {
+      ['cap1','cap2','cap3'].forEach(function(c) {
+        var card = document.getElementById(c);
+        if (card) card.classList.remove('selected');
+      });
+      this.classList.add('selected');
+    });
+  }
+});
+</script>
+</body>
+</html>
