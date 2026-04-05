@@ -1,0 +1,25 @@
+# Python cache & virtual environments
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# AI Models & Data (downloaded at runtime or mounted via volume)
+backend/models/
+
+# Documentation & Misc
+docs/
+docker/
+AGENTS.md
+README.md
+.git/
+.gitignore

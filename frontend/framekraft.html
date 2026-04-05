@@ -752,6 +752,7 @@ html, body {
       </div>
       <input type="range" min="0" max="100" value="50" step="1" class="ba-range" id="baRange">
       <div class="ba-range-labels"><span>original</span><span>edited</span></div>
+      <button id="downloadBtn" onclick="downloadEditedImage()" style="display:none;margin-top:16px;padding:10px 24px;border-radius:99px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;width:100%">Download Edited Image ↓</button>
       <div class="filter-badges">
         <span class="fbadge">desaturate<span class="val">+40</span></span>
         <span class="fbadge">cool_shift<span class="val">+15</span></span>
@@ -911,6 +912,7 @@ document.getElementById('screen-splash').addEventListener('click', goUpload);
 // ── File input ──────────────────────────────────────────
 var uploadedFile = null;
 var uploadedPreview = null;
+var editedImageDataUrl = null;
 var fileInput = document.getElementById('fileInput');
 
 fileInput.addEventListener('change', function(e) {
@@ -1005,6 +1007,15 @@ function populateResults(data) {
   // Before/After images
   var origSrc = data.original_image || uploadedPreview;
   var editSrc = data.edited_image;
+  editedImageDataUrl = editSrc;
+  var downloadBtn = document.getElementById('downloadBtn');
+  if (downloadBtn && editSrc) {
+    downloadBtn.style.display = 'block';
+  }
+  var downloadBtn = document.getElementById('downloadBtn');
+  if (downloadBtn && editSrc) {
+    downloadBtn.style.display = 'block';
+  }
 
   var baBefore = document.querySelector('.ba-before');
   var baAfter = document.getElementById('baAfter');
@@ -1205,6 +1216,34 @@ function stopTrack() {
   bar.classList.remove('visible');
   prog.style.width = '0%';
   currentTrack = null;
+}
+
+// ── Download edited image ────────────────────────────────
+function downloadEditedImage() {
+  if (!editedImageDataUrl) {
+    alert('No edited image available to download.');
+    return;
+  }
+  var a = document.createElement('a');
+  a.href = editedImageDataUrl;
+  a.download = 'framekraft_edited.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ── Download edited image ────────────────────────────────
+function downloadEditedImage() {
+  if (!editedImageDataUrl) {
+    alert('No edited image available to download.');
+    return;
+  }
+  var a = document.createElement('a');
+  a.href = editedImageDataUrl;
+  a.download = 'framekraft_edited.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── Caption selection ────────────────────────────────────

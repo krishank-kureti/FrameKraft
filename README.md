@@ -76,7 +76,7 @@ Open your browser and visit: **[http://localhost:8000](http://localhost:8000)** 
 2. **Upload** → Drag & drop or select an image (JPG/PNG/WEBP)
 3. **Mood & Vibe** → Describe the feeling and editing style
 4. **Processing** → Watch the AI work its magic ✨
-5. **Results** → View before/after, stylized captions, and play music 🎧
+5. **Results** → View before/after, stylized captions, play music 🎧, and **download** your edited image 💾
 
 ---
 
