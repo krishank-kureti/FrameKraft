@@ -1,32 +1,30 @@
-# FrameKraft Dockerfile
-# ---------------------
-# Packages the FastAPI backend + frontend into a single deployable image.
-# Note: The final image will be ~4-5GB due to PyTorch & AI model dependencies.
-# Models are downloaded on first request. Mount a volume to /app/backend/models/ for caching.
-
 FROM python:3.10-slim
 
-# Install system dependencies required by OpenCV and native Python packages
+# Install system dependencies for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory to backend (where Python modules live)
-WORKDIR /app/backend
+# Create a non-root user (required by Hugging Face Spaces)
+RUN useradd -m -u 1000 user
+USER user
 
-# Copy requirements first to leverage Docker layer caching
-COPY backend/requirements.txt .
+# Set up paths for the non-root user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-# Install Python dependencies
+WORKDIR /home/user/app
+
+# Copy and install dependencies
+COPY --chown=user backend/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
-COPY backend/ ./
+COPY --chown=user backend/ ./
 
-# Expose the FastAPI port
-EXPOSE 10000
+# Hugging Face Spaces uses port 7860
+EXPOSE 7860
 
-# Start the FastAPI server
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
