@@ -151,5 +151,3 @@ Feel free to fork, open issues, or submit PRs! When adding features:
 - Frontend → edit `frontend/framekraft.html`
 
 ---
-
-**Built with ❤️ and AI. Happy creating!** ✨
